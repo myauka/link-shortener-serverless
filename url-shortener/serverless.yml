@@ -12,6 +12,15 @@ provider:
   stage: orlov
   runtime: python3.8
 
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - "dynamodb:*"
+          Resource: !GetAtt Links.Arn
+#            Fn::GetAtt: [Links, Arn]
+
   environment:
     TABLE_NAME: ${sls:service}-${sls:stage}-links
     DNS_RECORD: !Join
@@ -38,7 +47,6 @@ functions:
           path: link/{url_id}
           method: get
 
-#доделать
 resources:
   Resources:
     Links:
@@ -46,10 +54,10 @@ resources:
       Properties:
         TableName: ${self:provider.environment.TABLE_NAME}
         AttributeDefinitions:
-          - AttributeName: email
+          - AttributeName: url_id
             AttributeType: S
         KeySchema:
-          - AttributeName: email
+          - AttributeName: url_id
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1

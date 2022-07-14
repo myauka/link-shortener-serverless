@@ -5,6 +5,7 @@ import random
 import string
 
 dynamodb_client = boto3.client("dynamodb")
+
 TABLE_NAME = os.environ["TABLE_NAME"]
 DNS_RECORD = os.environ["DNS_RECORD"]
 
