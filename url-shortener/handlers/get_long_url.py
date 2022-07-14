@@ -13,7 +13,7 @@ def redirect_to_long_url(event, context):
 
     result = dynamodb_client.get_item(
         TableName=TABLE_NAME,
-        Key={"url_id": {"S", url_id}}).get("Item")
+        Key={"url_id": {"S": url_id}}).get("Item")
 
     if not result:
         return {

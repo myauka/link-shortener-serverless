@@ -22,7 +22,7 @@ provider:
 #            Fn::GetAtt: [Links, Arn]
 
   environment:
-    TABLE_NAME: ${sls:service}-${sls:stage}-links
+    TABLE_NAME: ${self:service}-${sls:stage}-links
     DNS_RECORD: !Join
       - ""
       - - "https://"
@@ -31,16 +31,14 @@ provider:
 
 functions:
 
-  create:
-    name: ${sls:stage}
+  create_short_url:
     handler: handlers.create_short_url.add_short_url
     events:
       - http:
           path: link
           method: post
 
-
-  get:
+  get_long_url:
     handler: handlers.get_long_url.redirect_to_long_url
     events:
       - http:

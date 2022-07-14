@@ -10,7 +10,7 @@ TABLE_NAME = os.environ["TABLE_NAME"]
 DNS_RECORD = os.environ["DNS_RECORD"]
 
 
-def hello(event, context):
+def add_short_url(event, context):
     body = event["body"]
 
     if not body:
