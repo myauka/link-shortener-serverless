@@ -61,7 +61,7 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TimeToLiveSpecification:
-          AttributeName: TimeToLive
+          AttributeName: ttl
           Enabled: true
 
     myDomainName:

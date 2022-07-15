@@ -29,7 +29,7 @@ def add_short_url(event, context):
 
     url_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
 
-    exp_date = f'{int(time.time()) + 3600}'
+    exp_date = f'{int(time.time()) + 60}'
 
     dynamodb_client.put_item(
         TableName=TABLE_NAME,
