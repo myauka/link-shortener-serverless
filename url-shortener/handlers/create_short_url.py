@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import boto3
 import random
 import string
@@ -28,11 +29,14 @@ def add_short_url(event, context):
 
     url_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
 
+    exp_date = f'{int(time.time()) + 3600}'
+
     dynamodb_client.put_item(
         TableName=TABLE_NAME,
         Item={
             "url_id": {"S": url_id},
             "long_url": {"S": long_url},
+            "ttl": {"N": exp_date}
         }
     )
 
@@ -42,6 +46,7 @@ def add_short_url(event, context):
         "statusCode": 200,
         "body": json.dumps({
             "url_id": url_id,
-            "short_url": short_url
+            "short_url": short_url,
+            "ttl": exp_date
         })
     }
