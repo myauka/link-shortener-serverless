@@ -1,0 +1,12 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "url-shortener-sam"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-evm8on2gwt1m"
+s3_prefix = "url-shortener-sam"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
+parameter_overrides = "Stage=\"orlov\" HostedZonaId=\"Z0836271TEULZNK0FS42\" domainName=\"sam-orlov.perfsys.cf\" sslArn=\"arn:aws:acm:us-east-1:670726858704:certificate/c4651d62-e78e-4baf-a533-26bce68df147\""
