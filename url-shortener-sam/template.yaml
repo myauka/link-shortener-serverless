@@ -1,0 +1,138 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  url-shortener-sam
+
+  Sample SAM Template for url-shortener-sam
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+    CodeUri: handlers/
+    Runtime: python3.9
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        TABLE_NAME: !Sub "${AWS::StackName}-${Stage}-links"
+        DNS_RECORD: !Join
+          - ""
+          - - "https://"
+            - !Ref domainName
+            - "/"
+
+
+
+#Mappings:
+#  Params:
+#    TABLE_NAME:
+#      "TABLE_NAME": !Sub
+#        - ${AWS::StackName}-${StageName}-links
+#        - StageName: !Ref Stage
+
+Parameters:
+  Stage:
+    Type: String
+    Default: "orlov"
+
+  HostedZonaId:
+    Type: String
+    Default: "Z0836271TEULZNK0FS42"
+
+  domainName:
+    Type: String
+    Default: "sam-orlov.perfsys.cf"
+
+  sslArn:
+    Type: String
+    Default: "arn:aws:acm:us-east-1:670726858704:certificate/c4651d62-e78e-4baf-a533-26bce68df147"
+
+Resources:
+  ApiGatewayRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+
+
+  FailureReportingDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - "FailuresMethodGet"
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      StageName: !Ref Stage
+
+  CreateShortUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-${Stage}-post"
+      Handler: create_short_url.add_short_url
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Sub "${AWS::StackName}-${Stage}-links"
+      Events:
+        CreateShortUrl:
+          Type: Api
+          Properties:
+            Method: post
+            Path: link
+
+  GetLongUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-${Stage}-get"
+      Handler: get_long_url.redirect_to_long_url
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Sub "${AWS::StackName}-${Stage}-links"
+      Events:
+        GetLongUrl:
+          Type: Api
+          Properties:
+            Method: get
+            Path: link/{url_id}
+
+  Links:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName: !Sub "${AWS::StackName}-${Stage}-links"
+      AttributeDefinitions:
+        - AttributeName: url_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: url_id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  myDomainName:
+    Type: "AWS::ApiGateway::DomainName"
+    Properties:
+      CertificateArn: !Ref sslArn
+      DomainName: !Ref domainName
+
+  myMapping:
+    Type: "AWS::ApiGateway::BasePathMapping"
+    DependsOn:
+      - myDomainName
+    Properties:
+      BasePath: ""
+      Stage: !Ref Stage
+      DomainName: !Ref domainName
+      RestApiId: !Ref ApiGatewayRestApi
+
+  ApiRoute53Record:
+    Type: "AWS::Route53::RecordSetGroup"
+    Properties:
+      HostedZoneId: !Ref HostedZonaId
+      RecordSets:
+        - Name: !Ref domainName
+          Type: A
+          AliasTarget:
+            HostedZoneId: !GetAtt myDomainName.DistributionHostedZoneId
+            DNSName: !GetAtt myDomainName.DistributionDomainName
